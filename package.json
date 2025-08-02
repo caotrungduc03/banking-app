@@ -3,20 +3,35 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.0"
+  },
+  "packageManager": "yarn@1.22.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rimraf dist node_modules",
+    "reinstall": "yarn clean && yarn install"
+  },
+  "resolutions": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "dependencies": {
-    "@mantine/core": "^8.2.1",
+    "@mantine/core": "^8.2.2",
+    "@mantine/dates": "^8.2.2",
     "@mantine/form": "^8.2.1",
     "@mantine/hooks": "^8.2.1",
     "@simplewebauthn/browser": "^13.1.2",
     "@simplewebauthn/server": "^13.1.2",
     "@tabler/icons-react": "^3.34.1",
+    "dayjs": "^1.11.13",
     "firebase": "^12.0.0",
+    "jsqr": "^1.4.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
@@ -31,6 +46,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "rimraf": "^5.0.5",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"

@@ -1,8 +1,44 @@
+/* Global layout styles */
 #root {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.mantine-AppShell-root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mantine-Container-root {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+.mantine-Tabs-root {
+  width: 100%;
+}
+
+.mantine-Tabs-panel {
+  width: 100%;
+}
+
+.mantine-Paper-root {
+  width: 100%;
+}
+
+/* Responsive spacing */
+@media (max-width: 768px) {
+  .mantine-Container-root {
+    padding: 0.5rem !important;
+  }
 }
 
 .logo {

@@ -1,12 +1,17 @@
 import { Badge, Box, Button, Code, Paper, Text } from "@mantine/core";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, limit, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { app, db } from "../services/firebase";
 
 const FirebaseConnectionTest = () => {
-  const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "error">("checking");
+  const [connectionStatus, setConnectionStatus] = useState<"checking" | "connected" | "error" | "not_authenticated">(
+    "checking"
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const auth = getAuth(app);
 
   // Function to test the connection
   const testConnection = async () => {
@@ -15,14 +20,22 @@ const FirebaseConnectionTest = () => {
     setErrorDetails(null);
 
     try {
-      console.log("Testing Firestore connection...");
+      console.log("Testing Firebase configuration...");
 
       // Check Firebase initialization
       if (!app) {
         throw new Error("Firebase app not initialized");
       }
 
-      // Try a simple query to test connection
+      // Check authentication state
+      if (!isAuthenticated) {
+        console.log("User is not authenticated. Configuration check only.");
+        setConnectionStatus("not_authenticated");
+        return;
+      }
+
+      // If authenticated, try a simple query to test connection
+      console.log("User is authenticated. Testing Firestore connection...");
       const q = query(collection(db, "users"), limit(1));
       await getDocs(q);
 
@@ -41,7 +54,13 @@ const FirebaseConnectionTest = () => {
   };
 
   useEffect(() => {
-    testConnection();
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      testConnection();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -54,6 +73,17 @@ const FirebaseConnectionTest = () => {
         {connectionStatus === "checking" && <Badge color="yellow">Đang kiểm tra kết nối...</Badge>}
 
         {connectionStatus === "connected" && <Badge color="green">Đã kết nối thành công đến Firebase</Badge>}
+
+        {connectionStatus === "not_authenticated" && (
+          <>
+            <Badge color="blue" mb="xs">
+              Đã kết nối cấu hình
+            </Badge>
+            <Text size="sm" color="dimmed">
+              Cần đăng nhập để kiểm tra quyền truy cập Firestore
+            </Text>
+          </>
+        )}
 
         {connectionStatus === "error" && (
           <>

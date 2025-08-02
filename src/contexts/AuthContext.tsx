@@ -86,6 +86,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   async function signOut() {
+    setUserData(null);
+    setCurrentUser(null);
     await firebaseSignOut(auth);
   }
 
