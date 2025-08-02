@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { ReactNode } from 'react';
-import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword,
+import type { User as FirebaseUser } from "firebase/auth";
+import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  signInWithCustomToken
-} from 'firebase/auth';
-import type { User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import type { User } from '../types';
-import { AuthContext } from './AuthContextValue';
+  onAuthStateChanged,
+  signInWithCustomToken,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { auth, db } from "../services/firebase";
+import type { User } from "../types";
+import { AuthContext } from "./AuthContextValue";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -24,19 +24,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUserData = useCallback(async () => {
     if (!currentUser) return;
-    
+
     try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
+      console.log("Attempting to fetch user data from Firestore");
+      const userDocRef = doc(db, "users", currentUser.uid);
       const userDoc = await getDoc(userDocRef);
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data() as User;
         setUserData(userData);
+        console.log("Successfully retrieved user data");
       } else {
-        console.error('User document does not exist');
+        console.error("User document does not exist");
       }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
+    } catch (error: any) {
+      console.error("Error fetching user data:", error);
+      console.error("Error details:", error.code, error.message);
+
+      // Try to determine if it's a permission issue
+      if (error.code === "permission-denied") {
+        console.error("Firestore permission denied - check your security rules");
+      }
+      // Network related errors
+      if (error.code === "unavailable" || error.code === "failed-precondition") {
+        console.error("Network issue or Firestore connection problem");
+      }
     }
   }, [currentUser]);
 
@@ -44,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
+        console.log("User authenticated, fetching user data...");
         await refreshUserData();
       } else {
         setUserData(null);
@@ -62,9 +75,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signUp(email: string, password: string, displayName: string) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: user.email,
       displayName,
@@ -88,12 +101,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     signInWithToken,
-    refreshUserData
+    refreshUserData,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-} 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
